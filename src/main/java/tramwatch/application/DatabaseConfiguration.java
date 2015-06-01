@@ -1,4 +1,4 @@
-package tramwatch;
+package tramwatch.application;
 
 import org.springframework.boot.autoconfigure.jdbc.DataSourceBuilder;
 import org.springframework.boot.context.properties.ConfigurationProperties;

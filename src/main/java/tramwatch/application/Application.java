@@ -1,4 +1,4 @@
-package tramwatch;
+package tramwatch.application;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
