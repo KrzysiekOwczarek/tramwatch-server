@@ -1,6 +1,7 @@
 package tramwatch.application;
 
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.PropertySource;
@@ -12,7 +13,8 @@ import java.util.Arrays;
  * Created by krzysztofowczarek on 30/05/15.
  */
 @SpringBootApplication
-@PropertySources(value = {@PropertySource("classpath:config/application.properties")})
+@EnableAutoConfiguration
+@PropertySources(value = {@PropertySource("file:/Users/krzysztofowczarek/IdeaProjects/tramwatch-server/src/main/resources/config/application.properties")})
 public class Application {
     public static void main(String[] args) {
         ApplicationContext ctx = SpringApplication.run(Application.class, args);
