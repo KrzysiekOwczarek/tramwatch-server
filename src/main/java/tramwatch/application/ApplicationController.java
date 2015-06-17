@@ -11,19 +11,17 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import tramwatch.managers.BusStopManager;
-import tramwatch.pojo.BusStop;
-import tramwatch.pojo.BusStopForLocationRequest;
+import tramwatch.pojo.*;
 import tramwatch.utils.SAXParser;
 
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import javax.xml.bind.JAXBException;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 
 /**
@@ -42,17 +40,157 @@ public class ApplicationController {
     @Path("getStopsForLocation")
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
-    public List<BusStop> getStopsForLocation(BusStopForLocationRequest busStopForLocationRequest) {
+    public List<BusStopFromDB> getStopsForLocation(BusStopForLocationRequest busStopForLocationRequest) {
         return busStopManager.getStopsForLoc(busStopForLocationRequest.getLat(),
                 busStopForLocationRequest.getLon(), busStopForLocationRequest.getRadius());
     }
 
-    @RequestMapping(value = "getTest", method = RequestMethod.POST)
-    //@Consumes({ MediaType.APPLICATION_JSON })
-    //@Produces({ MediaType.APPLICATION_JSON })
-    public BusStop getTest(@RequestBody BusStopForLocationRequest busStopForLocationRequest) {
+    /*@RequestMapping(value = "getTest", method = RequestMethod.POST)
+    public BusStopFromDBEntity getTest(@RequestBody BusStopForLocationRequest busStopForLocationRequest) {
         System.out.println(busStopForLocationRequest.getLat() + busStopForLocationRequest.getLon());
-        return busStopManager.getTest();
+
+        BusStopFromDBEntity busStop = busStopManager.getName(busStopForLocationRequest.getLat(),
+                busStopForLocationRequest.getLon(), busStopForLocationRequest.getRadius());
+
+        System.out.println("CLOSE STOP: " + busStop.getName());
+
+        List<BusStop> busStops = getStops("Afry%");
+
+        Integer id = busStops.get(0).getId();
+
+        System.out.println("REQ with " + id + " AND 0" + busStop.getNumber());
+
+        List<String> lines = getLines(id, "0" + busStop.getNumber());
+
+        for (String s: lines) {
+            //System.out.println("ASKING WITH " + id + " , " + busStop.getNumber() + " , " + s);
+            //System.out.println("LINE " + s + " " + getTime(id, "0"+busStop.getNumber(), s));
+        }
+
+        return busStop;
+    }*/
+
+    @RequestMapping(value = "getResponse", method = RequestMethod.POST)
+    public BusStopFromDBEntity getResponse(@RequestBody BusStopForLocationRequest busStopForLocationRequest) {
+
+        //TODO: wyciągnij jakoś  sprytniej numbery/wszystkie
+        List<BusStopFromDBEntity> busStopFromDBEntityList = busStopManager.getName(busStopForLocationRequest.getLat(),
+                busStopForLocationRequest.getLon(), busStopForLocationRequest.getRadius());
+
+        for (BusStopFromDBEntity busStopFromDBEntity: busStopFromDBEntityList) {
+            List<BusStop> busStops = getStops("Afry%");
+
+            for (BusStop busStop: busStops) {
+                //TODO: popraw
+
+                System.out.println("ASKING FOR ID: " + busStop.getId());
+                List<BusLine> busLines = getLines(busStop.getId(), "02");
+                busStop.setBusLineList(busLines);
+
+                for (BusLine busLine: busLines) {
+                    System.out.println("LINE " + busLine.getLine());
+
+                    List<BusTime> busTimeList = getTime(busStop.getId(), "02", busLine.getLine());
+
+                    if (busTimeList.size() != 0) {
+                        busLine.setBusTime(busTimeList.get(0));
+                        System.out.println("NEXT at: " + busLine.getBusTime().getNextTime());
+                    }
+                }
+
+                break;
+            }
+
+            break;
+        }
+
+        return null;
+    }
+
+    private List<BusStop> getStops(String name) {
+        RestTemplate restTemplate = new RestTemplate();
+
+        HttpHeaders httpHeaders = new HttpHeaders();
+
+        StringBuilder authentication = new StringBuilder().append("pw").append(":").append("testpw4$");
+        String result = Base64.encodeBytes(authentication.toString().getBytes());
+
+        httpHeaders.add("Authorization", "Basic " + result);
+
+        HttpEntity<String> request = new HttpEntity<String>(httpHeaders);
+        ResponseEntity<String> response = restTemplate.exchange(
+                "https://api.bihapi.pl/orange/oracle/ztm/busstop?busstop="+name,
+                HttpMethod.GET, request, String.class);
+
+        saxParser.parseDocument(response.getBody());
+        saxParser.printData();
+
+        return saxParser.getBusStopList();
+    }
+
+    private List<BusLine> getLines(Integer id, String number) {
+        RestTemplate restTemplate = new RestTemplate();
+
+        HttpHeaders httpHeaders = new HttpHeaders();
+
+        StringBuilder authentication = new StringBuilder().append("pw").append(":").append("testpw4$");
+        String result = Base64.encodeBytes(authentication.toString().getBytes());
+
+        httpHeaders.add("Authorization", "Basic " + result);
+
+        HttpEntity<String> request = new HttpEntity<String>(httpHeaders);
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(
+                    "https://api.bihapi.pl/orange/oracle/ztm/lines?busstopId=" + id + "&busstopNr=" + number,
+                    HttpMethod.GET, request, String.class);
+
+            saxParser.parseDocument(response.getBody());
+        } catch(HttpClientErrorException ex) {
+            System.out.println("No result for id: " + id + " and no: " + number);
+        }
+
+        return saxParser.getBusLineList();
+    }
+
+    List<BusTime> getTime(Integer id, String number, String line) {
+        RestTemplate restTemplate = new RestTemplate();
+
+        HttpHeaders httpHeaders = new HttpHeaders();
+
+        StringBuilder authentication = new StringBuilder().append("pw").append(":").append("testpw4$");
+        String result = Base64.encodeBytes(authentication.toString().getBytes());
+
+        httpHeaders.add("Authorization", "Basic " + result);
+
+        HttpEntity<String> request = new HttpEntity<String>(httpHeaders);
+
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(
+                    "https://api.bihapi.pl/orange/oracle/ztm/time?busstopId=" + id + "&busstopNr=" + number + "&line=" + line,
+                    HttpMethod.GET, request, String.class);
+
+            saxParser.parseDocument(response.getBody());
+        } catch(HttpClientErrorException ex) {
+            System.out.println("No result for line: " + line);
+        }
+
+        return saxParser.getBusTimeList();
+    }
+
+    /*@GET
+    @RequestMapping("test")
+    String test() throws IOException {
+
+        TXTParser txtParser = new TXTParser("/Users/krzysztofowczarek/Desktop/timesheet.txt", entityManager);
+        txtParser.processLineByLine();
+
+        return "OK";
+    }*/
+
+    /*static String readFile(String path, Charset encoding) throws IOException
+    {
+        byte[] encoded = Files.readAllBytes(Paths.get(path));
+        return new String(encoded, encoding);
     }
 
     @GET
@@ -76,21 +214,5 @@ public class ApplicationController {
         saxParser.printData();
 
         return "OK";
-    }
-
-    /*@GET
-    @RequestMapping("test")
-    String test() throws IOException {
-
-        TXTParser txtParser = new TXTParser("/Users/krzysztofowczarek/Desktop/timesheet.txt", entityManager);
-        txtParser.processLineByLine();
-
-        return "OK";
     }*/
-
-    static String readFile(String path, Charset encoding) throws IOException
-    {
-        byte[] encoded = Files.readAllBytes(Paths.get(path));
-        return new String(encoded, encoding);
-    }
 }

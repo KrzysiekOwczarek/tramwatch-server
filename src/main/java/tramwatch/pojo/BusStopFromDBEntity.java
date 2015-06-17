@@ -13,7 +13,7 @@ import java.io.Serializable;
  */
 @Entity
 @Table(name="busstop")
-public class BusStopEntity implements Serializable {
+public class BusStopFromDBEntity implements Serializable {
 
     @Id
     @Column(name="id")
@@ -34,11 +34,11 @@ public class BusStopEntity implements Serializable {
     @Column(name="lon")
     private String lon;
 
-    public BusStopEntity() {
+    public BusStopFromDBEntity() {
 
     }
 
-    public BusStopEntity(String id, String number, String name, String direction, String lat, String lon) {
+    public BusStopFromDBEntity(String id, String number, String name, String direction, String lat, String lon) {
         this.id = id;
         this.name = name;
         this.direction = direction;
@@ -46,7 +46,7 @@ public class BusStopEntity implements Serializable {
         this.lon = lon;
     }
 
-    public BusStopEntity(BusStop object){
+    public BusStopFromDBEntity(BusStopFromDB object){
         BeanUtils.copyProperties(this, object);
     }
 

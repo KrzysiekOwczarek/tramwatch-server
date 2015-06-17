@@ -1,38 +1,31 @@
 package tramwatch.pojo;
 
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+import java.util.List;
 
 /**
- * Created by krzysztofowczarek on 04/06/15.
+ * Created by krzysztofowczarek on 17/06/15.
  */
+@XmlRootElement
 public class BusStop {
 
-    //@XmlElement(name="id")
+    @XmlElement
     private Integer id;
 
-    //@XmlElement(name="name")
-
-    private String number;
-
+    @XmlElement
     private String name;
 
-    private String direction;
-
-    private String lat;
-
-    private String lon;
+    private List<BusLine> busLineList;
 
     public BusStop() {}
 
-    public BusStop(Integer id, String name, String direction, String lat, String lon) {
+    public BusStop(Integer id, String name, List<BusLine> busLineList) {
         this.id = id;
         this.name = name;
-        this.direction = direction;
-        this.lat = lat;
-        this.lon = lon;
+        this.busLineList = busLineList;
     }
 
-    @XmlElement(name="id")
     public Integer getId() {
         return id;
     }
@@ -41,7 +34,6 @@ public class BusStop {
         this.id = id;
     }
 
-    @XmlElement(name="name")
     public String getName() {
         return name;
     }
@@ -50,39 +42,11 @@ public class BusStop {
         this.name = name;
     }
 
-    @XmlElement(name="direction")
-    public String getDirection() {
-        return direction;
+    public List<BusLine> getBusLineList() {
+        return busLineList;
     }
 
-    public void setDirection(String direction) {
-        this.direction = direction;
-    }
-
-    @XmlElement(name="lat")
-    public String getLat() {
-        return lat;
-    }
-
-    public void setLat(String lat) {
-        this.lat = lat;
-    }
-
-    @XmlElement(name="lon")
-    public String getLon() {
-        return lon;
-    }
-
-    public void setLon(String lon) {
-        this.lon = lon;
-    }
-
-    @XmlElement(name="number")
-    public String getNumber() {
-        return number;
-    }
-
-    public void setNumber(String number) {
-        this.number = number;
+    public void setBusLineList(List<BusLine> busLineList) {
+        this.busLineList = busLineList;
     }
 }
