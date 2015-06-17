@@ -14,7 +14,7 @@ public class RestClient {
 
             busStopForLocationRequest.setLat("52.224010");
             busStopForLocationRequest.setLon("21.071149");
-            busStopForLocationRequest.setRadius(1000);
+            busStopForLocationRequest.setRadius(500);
 
             /*BusStop busStop = restTemplate.postForObject("http://127.0.0.1:8080/getTest", busStopForLocationRequest,
                     BusStop.class);

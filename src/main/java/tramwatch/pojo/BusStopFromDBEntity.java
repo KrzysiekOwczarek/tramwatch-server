@@ -40,6 +40,7 @@ public class BusStopFromDBEntity implements Serializable {
 
     public BusStopFromDBEntity(String id, String number, String name, String direction, String lat, String lon) {
         this.id = id;
+        this.number = number;
         this.name = name;
         this.direction = direction;
         this.lat = lat;
@@ -59,7 +60,7 @@ public class BusStopFromDBEntity implements Serializable {
     }
 
     public String getNumber() {
-        return number;
+        return "0" + number;
     }
 
     public void setNumber(String number) {

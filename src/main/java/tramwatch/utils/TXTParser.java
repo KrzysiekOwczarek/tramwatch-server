@@ -1,6 +1,5 @@
 package tramwatch.utils;
 
-import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -24,10 +23,7 @@ public class TXTParser {
     private final static Charset ENCODING = StandardCharsets.UTF_8;
 
     private StopObject stopObject = null;
-
-    private StopObjectMgr stopObjectMgr;
-
-    private EntityManager entityManager;
+    private String name = null;
 
     private PrintWriter writer;
 
@@ -36,18 +32,10 @@ public class TXTParser {
 
     private boolean PR = false;
 
-    public TXTParser(String file, EntityManager entityManager) throws FileNotFoundException, UnsupportedEncodingException {
+    public TXTParser(String file) throws FileNotFoundException, UnsupportedEncodingException {
         path = Paths.get(file);
-        stopObjectMgr = new StopObjectMgr();
-        this.entityManager = entityManager;
 
-        if (entityManager != null) {
-            System.out.println("NOT NULL");
-        } else {
-            System.out.println("NULL");
-        }
-
-        writer = new PrintWriter("/Users/krzysztofowczarek/Desktop/test.csv", "UTF-8");
+        writer = new PrintWriter("/Users/krzysztofowczarek/Desktop/test2.csv", "UTF-8");
 
     }
 
@@ -68,11 +56,20 @@ public class TXTParser {
 
     @Transactional
     protected void processLine(String aLine){
+        if (aLine.contains("--")) {
+            name = aLine.split(",")[0].split("  +")[2];
+            System.out.println("NAME: " + name);
+        }
+
         if (aLine.contains("*PR")) {
             //System.out.println(aLine);
             PR = true;
 
             this.stopObject = new StopObject();
+
+
+            System.out.println("SETTING: " + name);
+            this.stopObject.setName(name);
 
             /*final Matcher matcher = patternWithSpaces.matcher(aLine);
             stopObject.setCode(Integer.parseInt(matcher.group(0)));
@@ -94,8 +91,7 @@ public class TXTParser {
 
                         this.stopObject.setId(Integer.parseInt(test2.get(0).replaceAll("\\s+", "")));
                         this.stopObject.setNumber(test2.get(1).trim().replaceAll(" +", " "));
-                        this.stopObject.setName(test2.get(2).trim().replaceAll(" +", " "));
-
+                        //this.stopObject.setName(test2.get(2).trim().replaceAll(" +", " "));
                         //System.out.println(stopObject.getName() + " " + stopObject.getId());
                     }else if(s.contains("Kier")) {
                         String[] aa = s.split(":");
@@ -114,20 +110,23 @@ public class TXTParser {
         }
 
         if (aLine.contains("#PR")) {
-            writer.append(String.valueOf(stopObject.getId()));
-            writer.append(',');
-            writer.append(stopObject.getNumber());
-            writer.append(',');
-            writer.append(stopObject.getName());
-            writer.append(',');
-            writer.append(stopObject.getDirection());
-            writer.append(',');
-            writer.append(stopObject.getLat());
-            writer.append(',');
-            writer.append(stopObject.getLon());
-            writer.append('\n');
+            if(stopObject.getLat() != null && stopObject.getLon() != null) {
+                writer.append(String.valueOf(stopObject.getId()));
+                writer.append(',');
+                writer.append(stopObject.getNumber());
+                writer.append(',');
+                writer.append(stopObject.getName());
+                writer.append(',');
+                writer.append(stopObject.getDirection());
+                writer.append(',');
+                writer.append(stopObject.getLat());
+                writer.append(',');
+                writer.append(stopObject.getLon());
+                writer.append('\n');
+            }
 
             this.stopObject = null;
+            this.name = null;
         }
     }
 }
