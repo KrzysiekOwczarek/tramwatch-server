@@ -9,6 +9,8 @@ public class BusTime {
 
     private String nextTime;
 
+    private String nextToGo;
+
     public BusTime() {}
 
     public BusTime(String direction, String nextTime) {
@@ -30,5 +32,13 @@ public class BusTime {
 
     public void setNextTime(String nextTime) {
         this.nextTime = nextTime;
+    }
+
+    public String getNextToGo() {
+        return nextToGo;
+    }
+
+    public void setNextToGo(String nextToGo) {
+        this.nextToGo = nextToGo;
     }
 }

@@ -41,4 +41,5 @@ dependencies {
     compile('org.springframework:spring-oxm:4.1.5.RELEASE')
     compile group: 'org.postgresql', name: 'postgresql', version: '9.3-1102-jdbc41'
     compile('org.apache.httpcomponents:httpclient:4.4-beta1')
+    compile('com.googlecode.json-simple:json-simple:1.1.1')
 }

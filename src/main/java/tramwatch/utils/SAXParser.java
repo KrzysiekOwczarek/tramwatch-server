@@ -12,7 +12,11 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParserFactory;
 import java.io.IOException;
 import java.io.StringReader;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -25,6 +29,7 @@ public class SAXParser extends DefaultHandler {
     List<BusTime> busTimeList;
     BusStop busStop;
     BusLine busLine;
+    BusTime busTime;
     String value;
 
     public SAXParser() {}
@@ -36,6 +41,7 @@ public class SAXParser extends DefaultHandler {
         busTimeList = new ArrayList<BusTime>();
         busStop = null;
         busLine = null;
+        busTime = null;
 
         try {
             javax.xml.parsers.SAXParser saxParser = factory.newSAXParser();
@@ -83,11 +89,36 @@ public class SAXParser extends DefaultHandler {
 
         if (element.equalsIgnoreCase("timetable")) {
             String[] times = value.split(",");
+            Calendar cal = Calendar.getInstance();
+
+            DateFormat dateFormat1 = new SimpleDateFormat("yyyy-MM-dd");
+            DateFormat dateFormat2 = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 
             for (String time: times) {
-                BusTime busTime = new BusTime();
-                busTime.setNextTime(time);
-                busTimeList.add(busTime);
+
+                String date = dateFormat1.format(cal.getTime());
+                try {
+                    Date dateStop = dateFormat2.parse(date + " " + time);
+
+                    System.out.println("DATE 1 : " + dateStop.toString() + " DATE 2: " + cal.getTime().toString());
+
+                    if(dateStop.compareTo(cal.getTime()) == 1) {
+                        busTime = new BusTime();
+                        busTime.setNextTime(time);
+                        busTime.setNextToGo(String.valueOf((dateStop.getTime() - cal.getTimeInMillis())/1000));
+
+                        System.out.println("NEXT TO GO: " + busTime.getNextToGo());
+
+                        busTimeList.add(busTime);
+
+                        System.out.println("FOUND DATE: " + busTime.getNextTime());
+                        break;
+                    }
+                }catch(Exception ex) {
+                    ex.printStackTrace();
+                }
+
+
             }
         }
 
@@ -104,8 +135,10 @@ public class SAXParser extends DefaultHandler {
         }
 
         if (element.equalsIgnoreCase("direction")) {
-            if (busLine != null) {
-                busLine.setDirection(value);
+
+            System.out.println("DIR: " + value);
+            if (busTime != null) {
+                busTime.setDirection(value);
             }
         }
     }

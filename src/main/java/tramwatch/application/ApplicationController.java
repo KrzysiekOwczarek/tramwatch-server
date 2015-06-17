@@ -1,6 +1,8 @@
 package tramwatch.application;
 
 
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 import org.postgresql.util.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
@@ -70,41 +72,79 @@ public class ApplicationController {
         return busStop;
     }*/
 
-    @RequestMapping(value = "getResponse", method = RequestMethod.POST)
-    public BusStopFromDBEntity getResponse(@RequestBody BusStopForLocationRequest busStopForLocationRequest) {
+    @RequestMapping(value = "getResponse", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON)
+    public String getResponse(@RequestBody BusStopForLocationRequest busStopForLocationRequest) {
 
         //TODO: wyciągnij jakoś  sprytniej numbery/wszystkie
         List<BusStopFromDBEntity> busStopFromDBEntityList = busStopManager.getName(busStopForLocationRequest.getLat(),
                 busStopForLocationRequest.getLon(), busStopForLocationRequest.getRadius());
 
+        JSONObject jsonObject = new JSONObject();
+
+        JSONArray jsonStops = new JSONArray();
+
         for (BusStopFromDBEntity busStopFromDBEntity: busStopFromDBEntityList) {
             List<BusStop> busStops = getStops("Afry%");
 
             for (BusStop busStop: busStops) {
+
+                JSONObject jsonBusstop = new JSONObject();
+                jsonBusstop.put("name", busStop.getName());
+
                 //TODO: popraw
+                JSONArray jsonVehicles = new JSONArray();
+
+
+
 
                 System.out.println("ASKING FOR ID: " + busStop.getId());
                 List<BusLine> busLines = getLines(busStop.getId(), "02");
                 busStop.setBusLineList(busLines);
 
                 for (BusLine busLine: busLines) {
+
+                    JSONObject jsonVehicle = new JSONObject();
+
                     System.out.println("LINE " + busLine.getLine());
 
                     List<BusTime> busTimeList = getTime(busStop.getId(), "02", busLine.getLine());
 
                     if (busTimeList.size() != 0) {
                         busLine.setBusTime(busTimeList.get(0));
+                        //TODO: to nie next
                         System.out.println("NEXT at: " + busLine.getBusTime().getNextTime());
+                        try {
+                            jsonVehicle.put("number", busLine.getLine());
+                            jsonVehicle.put("type", "bus");
+                            jsonVehicle.put("time", busLine.getBusTime().getNextTime());
+                            jsonVehicle.put("timeToGo", Math.ceil(Integer.parseInt(busLine.getBusTime().getNextToGo())/60));
+                            jsonVehicle.put("direction", busLine.getBusTime().getDirection());
+                        }catch (Exception ex) {
+                            ex.printStackTrace();
+                        }
                     }
+
+                    jsonVehicles.add(jsonVehicle);
+
+                    break;
                 }
 
+                jsonBusstop.put("vehicles", jsonVehicles);
+
+                jsonStops.add(jsonBusstop);
                 break;
             }
+
+
 
             break;
         }
 
-        return null;
+        jsonObject.put("stops", jsonStops);
+
+        System.out.println(jsonObject.toJSONString());
+
+        return jsonObject.toString();
     }
 
     private List<BusStop> getStops(String name) {
