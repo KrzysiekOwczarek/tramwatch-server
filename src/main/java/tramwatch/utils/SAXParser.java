@@ -103,7 +103,6 @@ public class SAXParser extends DefaultHandler {
                     System.out.println("DATE 1 : " + dateStop.toString() + " DATE 2: " + cal.getTime().toString());
 
                     if(dateStop.compareTo(cal.getTime()) == 1) {
-                        busTime = new BusTime();
                         busTime.setNextTime(time);
                         busTime.setNextToGo(String.valueOf((dateStop.getTime() - cal.getTimeInMillis())/1000));
 
@@ -135,11 +134,12 @@ public class SAXParser extends DefaultHandler {
         }
 
         if (element.equalsIgnoreCase("direction")) {
-
+            busTime = new BusTime();
             System.out.println("DIR: " + value);
-            if (busTime != null) {
+            //if (busTime != null) {
+                System.out.println("NIE NULL");
                 busTime.setDirection(value);
-            }
+            //}
         }
     }
 
